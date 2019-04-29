@@ -34,6 +34,7 @@ class znapzend::config {
   if $znapzend::manage_user and $znapzend::user != 'root' {
     group { $znapzend::group:
       ensure => 'present',
+      system => true,
       before => File[$znapzend::service_pid_dir],
     }
     -> user { $znapzend::user:
