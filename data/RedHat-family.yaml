@@ -1,0 +1,4 @@
+---
+znapzend::service_reload_cmd: 'systemctl reload znapzend'
+znapzend::zfs_path: '/usr/sbin'
+...
