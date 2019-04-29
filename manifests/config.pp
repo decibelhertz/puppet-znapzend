@@ -1,4 +1,4 @@
-# == Class: znapzend::install
+# == Class: znapzend::config
 #
 class znapzend::config {
 
@@ -37,11 +37,12 @@ class znapzend::config {
       before => File[$znapzend::service_pid_dir],
     }
     -> user { $znapzend::user:
-      ensure  => 'present',
-      comment => 'ZnapZend Backup user',
-      shell   => $znapzend::user_shell,
-      home    => $znapzend::user_home,
-      system  => true,
+      ensure     => 'present',
+      comment    => 'ZnapZend Backup user',
+      shell      => $znapzend::user_shell,
+      home       => $znapzend::user_home,
+      managehome => true,
+      system     => true,
     }
   }
 
