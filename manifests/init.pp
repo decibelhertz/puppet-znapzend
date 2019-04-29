@@ -97,7 +97,7 @@ class znapzend(
   Stdlib::Absolutepath $sudo_d_path,
   Enum['absent','latest','present'] $package_ensure,
   Boolean $package_manage,
-  String $package_name,
+  Variant[Array,String] $package_name,
   Boolean $service_enable,
   Enum['running','stopped'] $service_ensure,
   String $service_name,
@@ -112,14 +112,16 @@ class znapzend(
   Stdlib::Absolutepath $zfs_path,
   Hash $plans,
 ) {
-  validate_re($::osfamily, '^(RedHat|FreeBSD|Solaris)$',
-    "OS Family ${::osfamily} unsupported")
+  validate_re($facts['os']['family'], '^(RedHat|FreeBSD|Solaris)$',
+    "OS Family ${facts[os][family]} unsupported")
 
   Class['znapzend::install']
-  -> Class['znapzend::service']
+  -> Class['znapzend::config']
+  ~> Class['znapzend::service']
   -> Class['znapzend::plans']
 
   contain 'znapzend::install'
+  contain 'znapzend::config'
   contain 'znapzend::service'
   contain 'znapzend::plans'
 }

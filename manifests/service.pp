@@ -6,6 +6,5 @@ class znapzend::service {
     ensure    => $znapzend::service_ensure,
     enable    => $znapzend::service_enable,
     hasstatus => $znapzend::service_hasstatus,
-    name      => $znapzend::service_name,
   }
 }

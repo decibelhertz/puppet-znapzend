@@ -2,20 +2,37 @@ require 'spec_helper' # frozen_string_literal: true
 
 # rubocop:disable Metrics/BlockLength
 describe 'znapzend', type: :class do
-  %w[CentOS RedHat FreeBSD Solaris].each do |system|
+  %w[CentOS FreeBSD RedHat Solaris].each do |system|
     context "when on system #{system}" do
       if system == 'CentOS'
         let :facts do
-          { osfamily: 'RedHat', operatingsystem: system }
+          {
+            os: { family: 'RedHat' },
+            osfamily: 'RedHat',
+            operatingsystem: system
+          }
         end
       else
         let :facts do
-          { osfamily: system, operatingsystem: system }
+          { os: { family: system }, osfamily: system, operatingsystem: system }
         end
       end
 
-      it do should contain_class('znapzend::install') end
-      it do should contain_class('znapzend::service') end
+      it do
+        should contain_class(
+          'znapzend::install'
+        ).that_comes_before('Class[znapzend::config]')
+      end
+      it do
+        should contain_class(
+          'znapzend::config'
+        ).that_notifies('Class[znapzend::service]')
+      end
+      it do
+        should contain_class(
+          'znapzend::service'
+        ).that_comes_before('Class[znapzend::plans]')
+      end
       it do should contain_class('znapzend::plans') end
 
       describe 'znapzend::install' do
@@ -55,7 +72,9 @@ describe 'znapzend', type: :class do
             it do should_not contain_package('znapzend') end
           end
         end
+      end
 
+      describe 'znapzend::config' do
         describe 'init.d script' do
           let :params do
             { service_name: 'znapzend' }
@@ -68,8 +87,8 @@ describe 'znapzend', type: :class do
                   ensure: 'file',
                   owner: 'root',
                   group: 'wheel',
-                  mode: '0755',
-                  content: %r{\ncommand="/opt/znapzend/bin/znapzend"}
+                  mode: '0555',
+                  content: %r{\ncommand="/usr/local/bin/znapzend"}
                 )
               end
             end
@@ -136,7 +155,9 @@ describe 'znapzend', type: :class do
           end
 
           it do
-            should contain_group('znapzend').with_ensure('present')
+            should contain_group(
+              'znapzend'
+            ).with_ensure('present').that_comes_before('User[znapzend]')
           end
           it do
             should contain_user('znapzend').with(
@@ -152,8 +173,8 @@ describe 'znapzend', type: :class do
                 ensure: 'directory',
                 owner: 'znapzend',
                 group: 'znapzend',
-                mode: '0644',
-                recurse: true
+                mode: '0755',
+                recurse: nil
               )
             end
           end
@@ -203,11 +224,13 @@ describe 'znapzend', type: :class do
           {
             service_conf_dir: '/usr/local/etc/znapzend',
             plans: {
-              tank_foobar: { config_src: 'tank/foobar' },
+              'tank/foobar': {},
               backup_tank: { config_src: 'backup/tank' }
             }
           }
         end
+        it do should contain_znapzend__plan('tank/foobar') end
+        it do should contain_znapzend__plan('backup_tank') end
         it do
           should contain_file('/usr/local/etc/znapzend/tank_foobar').with(
             owner: 'znapzend',
