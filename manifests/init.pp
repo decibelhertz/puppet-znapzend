@@ -17,6 +17,30 @@
 # [*manage_sudo*]
 #   Defaults to true.  Defines whether to add sudo entries for zfs
 #
+# [*manage_init*]
+#   Defaults to true, except for FreeBSD.  Defines whether to add manage the
+#   service script for znapzend.
+#
+# [*user*]
+#   The user account the znapzend daemon should run under.  Defaults to
+#   'znapzend'
+#
+# [*user_home*]
+#    User home directory
+#
+# [*user_shell*]
+#   The shell defined for $user.  Defaults to 'bash'
+#
+# [*group*]
+#   The group assigned to relevant files and directories.  Defaults to
+#   'znapzend'
+#
+# [*sudo_d_path*]
+#   Defines path to sudoers.d directory
+#
+# [*package_ensure*]
+#   Defaults to 'present'. Can be set to a specific version of znapzend,
+#   or to 'latest' to ensure the package is always upgraded.
 # [*user*]
 #   The user account the znapzend daemon should run under.  Defaults to
 #   'znapzend'
@@ -90,6 +114,7 @@ class znapzend(
   Stdlib::Absolutepath $mbuffer_path,
   Boolean $manage_user,
   Boolean $manage_sudo,
+  Boolean $manage_init,
   String $user,
   Stdlib::Absolutepath $user_home,
   Stdlib::Absolutepath $user_shell,

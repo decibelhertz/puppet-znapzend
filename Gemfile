@@ -12,8 +12,10 @@ gem 'json_pure'
 gem 'rake'
 gem 'rspec'
 gem 'facter'
+gem 'metadata-json-lint'
 gem 'puppet', puppet_version
 gem 'rspec-puppet', '>= 2.0'
+gem 'rspec-puppet-facts'
 gem 'puppet-lint', :require => false
 gem 'puppet-syntax', :require => false
 

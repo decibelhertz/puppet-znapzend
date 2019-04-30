@@ -1,6 +1,7 @@
 ---
 znapzend::basedir: '/opt/znapzend/bin'
 znapzend::group: 'znapzend'
+znapzend::manage_init: true
 znapzend::manage_sudo: true
 znapzend::manage_user: true
 znapzend::mbuffer_path: '/usr/bin'

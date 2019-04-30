@@ -2,20 +2,10 @@ require 'spec_helper' # frozen_string_literal: true
 
 # rubocop:disable Metrics/BlockLength
 describe 'znapzend', type: :class do
-  %w[CentOS FreeBSD RedHat Solaris].each do |system|
-    context "when on system #{system}" do
-      if system == 'CentOS'
-        let :facts do
-          {
-            os: { family: 'RedHat' },
-            osfamily: 'RedHat',
-            operatingsystem: system
-          }
-        end
-      else
-        let :facts do
-          { os: { family: system }, osfamily: system, operatingsystem: system }
-        end
+  on_supported_os.each do |os, facts|
+    context "on #{os}" do
+      let :facts do
+        facts
       end
 
       it do
@@ -36,10 +26,7 @@ describe 'znapzend', type: :class do
       it do should contain_class('znapzend::plans') end
 
       describe 'znapzend::install' do
-        if system == 'Solaris'
-          let :params do
-            { package_manage: false, package_name: 'znapzend' }
-          end
+        if facts[:os]['family'] == 'Solaris'
           it do should_not contain_package('znapzend') end
         else
           let :params do
@@ -53,14 +40,21 @@ describe 'znapzend', type: :class do
 
           context 'should allow package ensure to be overridden' do
             let :params do
-              { package_ensure: 'latest', package_name: 'znoobar' }
+              {
+                package_ensure: 'latest',
+                package_name: ['zfoo', 'zbar', 'zbaz'],
+                package_manage: true
+              }
             end
-            it do should contain_package('znoobar').with_ensure('latest') end
+            it do should contain_package('zfoo').with_ensure('latest') end
+            it do should contain_package('zbar').with_ensure('latest') end
+            it do should contain_package('zbaz').with_ensure('latest') end
+            it do should_not contain_package('znapzend') end
           end
 
           context 'should allow the package name to be overridden' do
             let :params do
-              { package_name: 'foo' }
+              { package_name: 'foo', package_manage: true }
             end
             it do should contain_package('foo') end
           end
@@ -80,8 +74,17 @@ describe 'znapzend', type: :class do
             { service_name: 'znapzend' }
           end
 
-          if system == 'FreeBSD'
+          case facts[:os][:family]
+          when 'FreeBSD' then
+            context 'should not create init.d script on FreeBSD' do
+              it do
+                should_not contain_file('/usr/local/etc/rc.d/znapzend')
+              end
+            end
             context 'should create init.d script on FreeBSD' do
+              let :params do
+                { manage_init: true }
+              end
               it do
                 should contain_file('/usr/local/etc/rc.d/znapzend').with(
                   ensure: 'file',
@@ -92,9 +95,8 @@ describe 'znapzend', type: :class do
                 )
               end
             end
-          end
 
-          if system == 'RedHat'
+          when 'RedHat' then
             context 'should create init.d script on RedHat osFamily' do
               it do
                 should contain_file(
@@ -108,13 +110,31 @@ describe 'znapzend', type: :class do
                 )
               end
             end
-          end
+            context 'should not create init.d script on RedHat osFamily' do
+              let :params do
+                { manage_init: false }
+              end
+              it do
+                should_not contain_file('/lib/systemd/system/znapzend.service')
+              end
+            end
 
-          if system == 'Solaris'
+          when 'Solaris' then
             context 'should create init.d script on Solaris' do
               it do should contain_file('/lib/svc/method/znapzend') end
               it do
                 should contain_file(
+                  '/var/svc/manifest/system/filesystem/znapzend.xml'
+                )
+              end
+            end
+            context 'should_not create init.d script on Solaris' do
+              let :params do
+                { manage_init: false }
+              end
+              it do should_not contain_file('/lib/svc/method/znapzend') end
+              it do
+                should_not contain_file(
                   '/var/svc/manifest/system/filesystem/znapzend.xml'
                 )
               end
@@ -231,20 +251,6 @@ describe 'znapzend', type: :class do
         end
         it do should contain_znapzend__plan('tank/foobar') end
         it do should contain_znapzend__plan('backup_tank') end
-        it do
-          should contain_file('/usr/local/etc/znapzend/tank_foobar').with(
-            owner: 'znapzend',
-            group: 'znapzend',
-            notify: 'Exec[load_tank_foobar]'
-          )
-        end
-        it do
-          should contain_file('/usr/local/etc/znapzend/backup_tank').with(
-            owner: 'znapzend',
-            group: 'znapzend',
-            notify: 'Exec[load_backup_tank]'
-          )
-        end
       end
     end
   end

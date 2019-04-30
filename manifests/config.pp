@@ -47,9 +47,10 @@ class znapzend::config {
     }
   }
 
-  # OS-specific init script(s)
-  case $facts['os']['family'] {
-    'FreeBSD': {
+  if $znapzend::manage_init {
+    # OS-specific init script(s)
+    case $facts['os']['family'] {
+      'FreeBSD': {
         file { "/usr/local/etc/rc.d/${znapzend::service_name}":
           ensure  => 'file',
           owner   => 'root',
@@ -57,7 +58,7 @@ class znapzend::config {
           mode    => '0555',
           content => epp('znapzend/znapzend_init_freebsd.epp'),
         }
-    } 'RedHat': {
+      } 'RedHat': {
         file { '/lib/systemd/system/znapzend.service':
           ensure  => 'file',
           owner   => 'root',
@@ -65,7 +66,7 @@ class znapzend::config {
           mode    => '0644',
           content => epp('znapzend/znapzend_init_redhat.epp'),
         }
-    } 'Solaris': {
+      } 'Solaris': {
         file {
           "/lib/svc/method/${znapzend::service_name}":
             ensure  => 'file',
@@ -88,8 +89,9 @@ class znapzend::config {
             "/var/svc/manifest/system/filesystem/${znapzend::service_name}.xml",
           ], ' '),
         }
-    } default: {
-      # NOOP
+      } default: {
+        # NOOP
+      }
     }
   }
 }
