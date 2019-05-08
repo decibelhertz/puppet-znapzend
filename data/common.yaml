@@ -1,6 +1,9 @@
 ---
 znapzend::basedir: '/opt/znapzend/bin'
-znapzend::group: 'znapzend'
+znapzend::groups:
+  znapzend:
+    ensure: 'present'
+    system: true
 znapzend::manage_init: true
 znapzend::manage_sudo: true
 znapzend::manage_user: true
@@ -21,8 +24,14 @@ znapzend::service_pid_dir: '/var/run/znapzend'
 znapzend::service_pid_file: '/var/run/znapzend/znapzend.pid'
 znapzend::service_reload_cmd: 'service znapzend reload'
 znapzend::sudo_d_path: '/etc/sudoers.d'
-znapzend::user_home: '/home/znapzend'
 znapzend::user_shell: '/bin/bash'
-znapzend::user: 'znapzend'
+znapzend::users:
+  znapzend:
+    ensure: 'present'
+    comment: 'ZnapZend Backup user'
+    home: '/home/znapzend'
+    managehome: true
+    system: true
+    require: 'Group[znapzend]'
 znapzend::zfs_path: '/sbin'
 ...

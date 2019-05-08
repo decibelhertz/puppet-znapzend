@@ -2,20 +2,43 @@
 #
 class znapzend::config {
 
+  ## CLASS VARIABLES
+
+  $init_path = $facts['os']['family'] ? {
+    'FreeBSD' => "/usr/local/etc/rc.d/${znapzend::service_name}",
+    'Solaris' => "/lib/svc/method/${znapzend::service_name}",
+    default   => "/lib/systemd/system/${znapzend::service_name}.service",
+  }
+  $init_mode = $facts['os']['family'] ? {
+    'RedHat'  => '0644',
+    default   => '0555',
+  }
+  $root_group= $facts['os']['family'] ? {
+    'Darwin'  => 'wheel',
+    'Solaris' => 'bin',
+    default   => 'root',
+  }
+  $osdowncase = downcase($facts['os']['family'])
+
+  ## MANAGED RESOURCES
+
   # directories
   file {
-    $znapzend::service_pid_dir:
+    'znapzend_service_conf_dir':
       ensure => 'directory',
+      path   => $znapzend::service_conf_dir,
       owner  => $znapzend::user,
       group  => $znapzend::group,
       mode   => '0755',;
-    $znapzend::service_log_dir:
+    'znapzend_service_log_dir':
       ensure => 'directory',
+      path   => $znapzend::service_log_dir,
       owner  => $znapzend::user,
       group  => $znapzend::group,
       mode   => '0755',;
-    $znapzend::service_conf_dir:
+    'znapzend_service_pid_dir':
       ensure => 'directory',
+      path   => $znapzend::service_pid_dir,
       owner  => $znapzend::user,
       group  => $znapzend::group,
       mode   => '0755',;
@@ -25,6 +48,7 @@ class znapzend::config {
   if $znapzend::manage_sudo {
     file { "${znapzend::sudo_d_path}/znapzend":
       owner   => 'root',
+      group   => $root_group,
       mode    => '0440',
       content => epp('znapzend/znapzend_sudo.epp'),
     }
@@ -32,65 +56,45 @@ class znapzend::config {
 
   # conditional add non-root user/group
   if $znapzend::manage_user and $znapzend::user != 'root' {
-    group { $znapzend::group:
-      ensure => 'present',
-      system => true,
-      before => File[$znapzend::service_pid_dir],
-    }
-    -> user { $znapzend::user:
-      ensure     => 'present',
-      comment    => 'ZnapZend Backup user',
-      shell      => $znapzend::user_shell,
-      home       => $znapzend::user_home,
-      managehome => true,
-      system     => true,
-    }
+    create_resources('group', $znapzend::groups, {
+      before => File[
+        'znapzend_service_conf_dir',
+        'znapzend_service_log_dir',
+        'znapzend_service_pid_dir',
+      ],
+    })
+    create_resources('user', $znapzend::users, {
+      shell => $znapzend::user_shell,
+    })
   }
 
   if $znapzend::manage_init {
     # OS-specific init script(s)
-    case $facts['os']['family'] {
-      'FreeBSD': {
-        file { "/usr/local/etc/rc.d/${znapzend::service_name}":
+    file { 'znapzend_init':
+      ensure  => 'file',
+      owner   => 'root',
+      group   => $root_group,
+      mode    => $init_mode,
+      path    => $init_path,
+      content => epp("znapzend/znapzend_init_${osdowncase}.epp"),
+    }
+
+    # Solaris needs more resources...
+    if $facts['os']['family'] == 'Solaris' {
+      file {
+        "/var/svc/manifest/system/filesystem/${znapzend::service_name}.xml":
           ensure  => 'file',
           owner   => 'root',
-          group   => 'wheel',
+          group   => 'bin',
           mode    => '0555',
-          content => epp('znapzend/znapzend_init_freebsd.epp'),
-        }
-      } 'RedHat': {
-        file { '/lib/systemd/system/znapzend.service':
-          ensure  => 'file',
-          owner   => 'root',
-          group   => 'root',
-          mode    => '0644',
-          content => epp('znapzend/znapzend_init_redhat.epp'),
-        }
-      } 'Solaris': {
-        file {
-          "/lib/svc/method/${znapzend::service_name}":
-            ensure  => 'file',
-            owner   => 'root',
-            group   => 'bin',
-            mode    => '0555',
-            content => epp('znapzend/znapzend_init_solaris.epp'),;
-          "/var/svc/manifest/system/filesystem/${znapzend::service_name}.xml":
-            ensure  => 'file',
-            owner   => 'root',
-            group   => 'bin',
-            mode    => '0555',
-            content => epp('znapzend/znapzend.xml.epp'),
-            notify  => Exec['reload-manifest'],;
-        }
-        exec { 'reload-manifest':
-          refreshonly => true,
-          command     => join([
-            '/usr/sbin/svccfg import',
-            "/var/svc/manifest/system/filesystem/${znapzend::service_name}.xml",
-          ], ' '),
-        }
-      } default: {
-        # NOOP
+          content => epp('znapzend/znapzend.xml.epp'),
+      }
+      ~> exec { 'reload-manifest':
+        refreshonly => true,
+        command     => join([
+          '/usr/sbin/svccfg import',
+          "/var/svc/manifest/system/filesystem/${znapzend::service_name}.xml",
+        ], ' '),
       }
     }
   }

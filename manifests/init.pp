@@ -21,17 +21,14 @@
 #   Defaults to true, except for FreeBSD.  Defines whether to add manage the
 #   service script for znapzend.
 #
-# [*user*]
-#   The user account the znapzend daemon should run under.  Defaults to
-#   'znapzend'
-#
-# [*user_home*]
-#    User home directory
+# [*users*]
+#   A Hash of the user account the znapzend daemon should run under.  Defaults
+#   to 'znapzend'
 #
 # [*user_shell*]
 #   The shell defined for $user.  Defaults to 'bash'
 #
-# [*group*]
+# [*groups*]
 #   The group assigned to relevant files and directories.  Defaults to
 #   'znapzend'
 #
@@ -41,19 +38,9 @@
 # [*package_ensure*]
 #   Defaults to 'present'. Can be set to a specific version of znapzend,
 #   or to 'latest' to ensure the package is always upgraded.
-# [*user*]
-#   The user account the znapzend daemon should run under.  Defaults to
-#   'znapzend'
-#
-# [*user_home*]
-#    User home directory
 #
 # [*user_shell*]
 #   The shell defined for $user.  Defaults to 'bash'
-#
-# [*group*]
-#   The group assigned to relevant files and directories.  Defaults to
-#   'znapzend'
 #
 # [*sudo_d_path*]
 #   Defines path to sudoers.d directory
@@ -115,10 +102,9 @@ class znapzend(
   Boolean $manage_user,
   Boolean $manage_sudo,
   Boolean $manage_init,
-  String $user,
-  Stdlib::Absolutepath $user_home,
+  Hash $users,
+  Hash $groups,
   Stdlib::Absolutepath $user_shell,
-  String $group,
   Stdlib::Absolutepath $sudo_d_path,
   Enum['absent','latest','present'] $package_ensure,
   Boolean $package_manage,
@@ -140,6 +126,11 @@ class znapzend(
   validate_re($facts['os']['family'], '^(RedHat|FreeBSD|Solaris)$',
     "OS Family ${facts[os][family]} unsupported")
 
+  ## CLASS VARIABLES
+  $user = keys($users)[0]
+  $group = keys($groups)[0]
+
+  ## MANAGED RESOURCES
   Class['znapzend::install']
   -> Class['znapzend::config']
   ~> Class['znapzend::service']

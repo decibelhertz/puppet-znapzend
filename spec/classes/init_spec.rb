@@ -164,10 +164,6 @@ describe 'znapzend', type: :class do
           let :params do
             {
               manage_user: true,
-              user: 'znapzend',
-              group: 'znapzend',
-              user_shell: '/bin/bash',
-              user_home: '/home/znapzend',
               service_pid_dir: '/var/run/znapzend',
               service_log_dir: '/var/log/znapzend',
               service_conf_dir: '/usr/local/etc/znapzend'
@@ -182,18 +178,25 @@ describe 'znapzend', type: :class do
           it do
             should contain_user('znapzend').with(
               ensure: 'present',
-              shell: '/bin/bash',
               home: '/home/znapzend'
             )
+            if facts[:os]['family'] == 'FreeBSD'
+              should contain_user('znapzend').with(
+                shell: '/usr/local/bin/bash'
+              )
+            else
+              should contain_user('znapzend').with_shell('/bin/bash')
+            end
           end
 
           context 'should create pid dir' do
             it do
-              should contain_file('/var/run/znapzend').with(
+              should contain_file('znapzend_service_pid_dir').with(
                 ensure: 'directory',
                 owner: 'znapzend',
                 group: 'znapzend',
                 mode: '0755',
+                path: '/var/run/znapzend',
                 recurse: nil
               )
             end
@@ -201,10 +204,11 @@ describe 'znapzend', type: :class do
 
           context 'should create log dir' do
             it do
-              should contain_file('/var/log/znapzend').with(
+              should contain_file('znapzend_service_log_dir').with(
                 ensure: 'directory',
                 owner: 'znapzend',
                 group: 'znapzend',
+                path: '/var/log/znapzend',
                 mode: '0755'
               )
             end
@@ -212,10 +216,11 @@ describe 'znapzend', type: :class do
 
           context 'should create config dir' do
             it do
-              should contain_file('/usr/local/etc/znapzend').with(
+              should contain_file('znapzend_service_conf_dir').with(
                 ensure: 'directory',
                 owner: 'znapzend',
                 group: 'znapzend',
+                path: '/usr/local/etc/znapzend',
                 mode: '0755'
               )
             end
