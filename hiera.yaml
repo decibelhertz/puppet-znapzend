@@ -13,7 +13,7 @@ hierarchy:
 - name: 'Distribution Name'
   path: '%{facts.os.name}.yaml'
 - name: 'Operating System Family'
-  path: '%{facts.os.family}-family.yaml'
+  path: '%{facts.osfamily}-family.yaml'
 - name: 'Operating System Kernel'
   path: '%{facts.kernel}-kernel.yaml'
 - name: 'common'

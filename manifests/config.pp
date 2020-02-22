@@ -49,7 +49,7 @@ class znapzend::config {
 
   if $znapzend::manage_init {
     # OS-specific init script(s)
-    case $facts['os']['family'] {
+    case $facts['osfamily'] {
       'FreeBSD': {
         file { "/usr/local/etc/rc.d/${znapzend::service_name}":
           ensure  => 'file',

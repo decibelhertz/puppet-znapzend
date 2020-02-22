@@ -19,7 +19,6 @@ gem 'rspec-puppet-facts'
 gem 'puppet-lint', :require => false
 gem 'puppet-syntax', :require => false
 
-gem 'puppet-lint'
 # http://www.camptocamp.com/en/actualite/getting-code-ready-puppet-4/
 gem 'puppet-lint-unquoted_string-check'
 gem 'puppet-lint-empty_string-check'

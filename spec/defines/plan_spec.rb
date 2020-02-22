@@ -1,4 +1,5 @@
 require 'spec_helper' # frozen_string_literal: true
+require 'pp' # frozen_string_literal: true
 
 # rubocop:disable Metrics/BlockLength
 describe 'znapzend::plan', type: 'define' do
@@ -67,13 +68,14 @@ describe 'znapzend::plan', type: 'define' do
     end
   end
 
-  on_supported_os.each do |os, facts|
+  on_supported_os.sort.each do |os, os_facts|
     context "on #{os}" do
       let :facts do
-        facts
+        os_facts
       end
+      pp os_facts
 
-      case facts[:os]['family']
+      case os_facts[:osfamily]
       when 'FreeBSD' then
         include_context 'Supported Platform'
         it_behaves_like 'FreeBSD'

@@ -137,8 +137,8 @@ class znapzend(
   Stdlib::Absolutepath $zfs_path,
   Hash $plans,
 ) {
-  validate_re($facts['os']['family'], '^(RedHat|FreeBSD|Solaris)$',
-    "OS Family ${facts[os][family]} unsupported")
+  validate_re($facts['osfamily'], '^(RedHat|FreeBSD|Solaris)$',
+    "OS Family ${facts[osfamily]} unsupported")
 
   Class['znapzend::install']
   -> Class['znapzend::config']

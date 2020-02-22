@@ -2,10 +2,10 @@ require 'spec_helper' # frozen_string_literal: true
 
 # rubocop:disable Metrics/BlockLength
 describe 'znapzend', type: :class do
-  on_supported_os.each do |os, facts|
+  on_supported_os.sort.each do |os, os_facts|
     context "on #{os}" do
       let :facts do
-        facts
+        os_facts
       end
 
       it do
@@ -26,7 +26,7 @@ describe 'znapzend', type: :class do
       it do should contain_class('znapzend::plans') end
 
       describe 'znapzend::install' do
-        if facts[:os]['family'] == 'Solaris'
+        if os_facts[:osfamily] == 'Solaris'
           it do should_not contain_package('znapzend') end
         else
           let :params do
@@ -74,7 +74,7 @@ describe 'znapzend', type: :class do
             { service_name: 'znapzend' }
           end
 
-          case facts[:os][:family]
+          case os_facts[:osfamily]
           when 'FreeBSD' then
             context 'should not create init.d script on FreeBSD' do
               it do
